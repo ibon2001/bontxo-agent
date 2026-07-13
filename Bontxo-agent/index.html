@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bontxo Agent - Life OS</title>
+    <meta name="description" content="Tu sistema personal de vida equilibrada">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+    <!-- ==================== LOADING OVERLAY ==================== -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="spinner"></div>
+        <p class="loading-text">Iniciando Bontxo Agent...</p>
+    </div>
+    
+    <!-- ==================== SETUP INSTRUCTIONS ==================== -->
+    <div class="setup-instructions" id="setup-instructions">
+        <div class="setup-container">
+            <div class="icon">🔑</div>
+            <h2>Configuración requerida</h2>
+            <p>Para usar Bontxo Agent necesitas conectar tu base de datos de Supabase.</p>
+            
+            <div class="steps">
+                <ol>
+                    <li>Ve a <a href="https://supabase.com" target="_blank">supabase.com</a></li>
+                    <li>Crea un proyecto (o usa el existente)</li>
+                    <li>Ve a Settings → API</li>
+                    <li>Copia la URL y la Key anónima</li>
+                    <li>Pégalas en el recuadro de abajo</li>
+                </ol>
+            </div>
+            
+            <div class="input-group">
+                <label>URL de Supabase</label>
+                <input type="text" id="config-url" placeholder="https://xxxxx.supabase.co">
+            </div>
+            <div class="input-group">
+                <label>Anon Key</label>
+                <input type="text" id="config-key" placeholder="eyJhbGciOiJIUzI1NiIs...">
+            </div>
+            <button class="btn btn-primary btn-full" onclick="saveConfig()">
+                Conectar y continuar
+            </button>
+        </div>
+    </div>
+    
+    <!-- ==================== SETUP WIZARD ==================== -->
+    <div class="setup-wizard" id="setup-wizard" style="display: none;">
+        <div class="setup-container">
+            <div class="setup-card">
+                <div class="setup-header">
+                    <div class="setup-logo">🎯</div>
+                    <h1>Bienvenido a Bontxo Agent</h1>
+                    <p style="color: var(--text-secondary);">Configuremos tu espacio personal</p>
+                </div>
+                
+                <div class="setup-steps">
+                    <div class="setup-step-indicator active"></div>
+                    <div class="setup-step-indicator"></div>
+                    <div class="setup-step-indicator"></div>
+                    <div class="setup-step-indicator"></div>
+                </div>
+                
+                <!-- Step 1 -->
+                <div id="setup-step-1">
+                    <div class="setup-question">
+                        <label>¿Cómo te llamas?</label>
+                        <div class="input-group">
+                            <input type="text" id="setup-nombre" placeholder="Tu nombre">
+                        </div>
+                    </div>
+                    <div class="setup-question">
+                        <label>¿Cuántos años tienes?</label>
+                        <div class="input-group">
+                            <input type="number" id="setup-edad" placeholder="Edad" min="1" max="120">
+                        </div>
+                    </div>
+                    <div class="setup-question">
+                        <label>¿A qué te dedicas?</label>
+                        <div class="input-group">
+                            <input type="text" id="setup-profesion" placeholder="Trabajo, estudiante, etc.">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 2 -->
+                <div id="setup-step-2" style="display: none;">
+                    <div class="setup-question">
+                        <label>¿En qué ciudad vives?</label>
+                        <div class="input-group">
+                            <input type="text" id="setup-ciudad" placeholder="Tu ciudad">
+                        </div>
+                    </div>
+                    <div class="setup-question">
+                        <label>¿Cuántas horas dispones al día para ti?</label>
+                        <div class="input-group">
+                            <select id="setup-disponibilidad">
+                                <option value="pocas">2-3 horas</option>
+                                <option value="moderada" selected>4-5 horas</option>
+                                <option value="muchas">6+ horas</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="setup-question">
+                        <label>¿Cuándo sueles estar disponible?</label>
+                        <div class="input-group">
+                            <input type="text" id="setup-horario" placeholder="Mañanas, tardes, noches...">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 3 -->
+                <div id="setup-step-3" style="display: none;">
+                    <div class="setup-question">
+                        <label>¿Cómo definirías tu nivel de energía habitual?</label>
+                        <div class="rating-scale" id="setup-energia">
+                            <button class="rating-btn">3</button>
+                            <button class="rating-btn">4</button>
+                            <button class="rating-btn selected">5</button>
+                            <button class="rating-btn">6</button>
+                            <button class="rating-btn">7</button>
+                            <button class="rating-btn">8</button>
+                            <button class="rating-btn">9</button>
+                        </div>
+                    </div>
+                    <div class="setup-question">
+                        <label>¿Qué tipo de actividades te interesan más?</label>
+                        <div class="input-group">
+                            <textarea id="setup-intereses" placeholder="Ej: programación, música, deporte..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Step 4 -->
+                <div id="setup-step-4" style="display: none;">
+                    <div class="setup-question">
+                        <label>¿Qué entiendes por un "día bien aprovechado"?</label>
+                        <div class="input-group">
+                            <textarea id="setup-buen-dia" placeholder="Describe tu día ideal..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="setup-nav">
+                    <button class="btn btn-secondary" id="setup-prev" style="visibility: hidden;">← Anterior</button>
+                    <button class="btn btn-primary" id="setup-next">Siguiente →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ==================== MAIN APP ==================== -->
+    <div class="app-container" id="main-app" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">🎯 Bontxo Agent</div>
+                <div class="tagline">Tu sistema de vida equilibrada</div>
+            </div>
+            
+            <nav>
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                    <div class="nav-item active" data-page="dashboard">
+                        <span class="icon">🏠</span>
+                        <span>Inicio</span>
+                    </div>
+                    <div class="nav-item" data-page="daily">
+                        <span class="icon">📝</span>
+                        <span>Registro Diario</span>
+                    </div>
+                    <div class="nav-item" data-page="projects">
+                        <span class="icon">🚀</span>
+                        <span>Proyectos</span>
+                    </div>
+                    <div class="nav-item" data-page="activities">
+                        <span class="icon">✨</span>
+                        <span>Actividades</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Análisis</div>
+                    <div class="nav-item" data-page="insights">
+                        <span class="icon">📊</span>
+                        <span>Insights</span>
+                    </div>
+                    <div class="nav-item" data-page="history">
+                        <span class="icon">📅</span>
+                        <span>Historial</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Configuración</div>
+                    <div class="nav-item" data-page="profile">
+                        <span class="icon">👤</span>
+                        <span>Perfil</span>
+                    </div>
+                    <div class="nav-item" data-page="settings">
+                        <span class="icon">⚙️</span>
+                        <span>Ajustes</span>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Mobile Menu Button -->
+        <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            
+            <!-- ==================== DASHBOARD PAGE ==================== -->
+            <div class="page active" id="page-dashboard">
+                <div class="welcome-header">
+                    <div class="welcome-greeting" id="welcome-greeting">Buenos días</div>
+                    <h1 class="welcome-title" id="welcome-name">Cargando...</h1>
+                    <div class="welcome-date" id="welcome-date"></div>
+                </div>
+                
+                <div class="briefing-card">
+                    <div class="briefing-label">Briefing matutino</div>
+                    <div class="briefing-title" id="briefing-title">¿Qué tal si hoy...</div>
+                    <div class="briefing-content" id="briefing-content">Cargando...</div>
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="quick-action" data-page="daily">
+                        <span class="icon">📝</span>
+                        <span>Registrar Día</span>
+                    </div>
+                    <div class="quick-action" data-page="projects">
+                        <span class="icon">🚀</span>
+                        <span>Proyectos</span>
+                    </div>
+                    <div class="quick-action" data-page="activities">
+                        <span class="icon">✨</span>
+                        <span>Actividades</span>
+                    </div>
+                    <div class="quick-action" onclick="openModal('retrospective-modal')">
+                        <span class="icon">🌙</span>
+                        <span>Retrospectiva</span>
+                    </div>
+                </div>
+                
+                <div class="today-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Tu estado hoy</h2>
+                        <button class="btn btn-sm btn-secondary" data-page="daily">Actualizar</button>
+                    </div>
+                    <div class="grid grid-5">
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-energia">-</div>
+                            <div class="stat-label">Energía</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-animo">-</div>
+                            <div class="stat-label">Ánimo</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-productividad">-</div>
+                            <div class="stat-label">Productividad</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-diversion">-</div>
+                            <div class="stat-label">Diversión</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="stat-estres">-</div>
+                            <div class="stat-label">Estrés</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card energy-meter">
+                    <h3 class="card-title">Medidor de Energía</h3>
+                    <div class="energy-visual">
+                        <div class="energy-icon" id="energy-icon">⚡</div>
+                        <div class="energy-bars" id="energy-bars">
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                            <div class="energy-bar"></div>
+                        </div>
+                    </div>
+                    <div class="energy-text" id="energy-text">Nivel de energía no registrado hoy</div>
+                </div>
+                
+                <div class="today-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Proyectos Activos</h2>
+                        <button class="btn btn-sm btn-primary" onclick="openModal('new-project-modal')">+ Nuevo</button>
+                    </div>
+                    <div id="active-projects-list">
+                        <div class="empty-state">
+                            <div class="icon">🚀</div>
+                            <h3>Sin proyectos activos</h3>
+                            <p>Crea tu primer proyecto</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="today-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Sugerencia del día</h2>
+                    </div>
+                    <div class="suggestion-card" id="daily-suggestion">
+                        <div class="suggestion-icon">💡</div>
+                        <div class="suggestion-content">
+                            <h4>Cargando...</h4>
+                            <p>Obteniendo recomendaciones...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== DAILY PAGE ==================== -->
+            <div class="page" id="page-daily">
+                <div class="page-header">
+                    <h1 class="page-title">📝 Registro Diario</h1>
+                    <p class="page-subtitle">¿Cómo va tu día hoy?</p>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">¿Cómo te sientes?</h3>
+                    <div class="mood-selector" id="mood-selector">
+                        <button class="mood-btn" data-mood="1"><span class="emoji">😫</span><span class="label">Fatal</span></button>
+                        <button class="mood-btn" data-mood="2"><span class="emoji">😔</span><span class="label">Mal</span></button>
+                        <button class="mood-btn" data-mood="3"><span class="emoji">😐</span><span class="label">Neutral</span></button>
+                        <button class="mood-btn" data-mood="4"><span class="emoji">🙂</span><span class="label">Bien</span></button>
+                        <button class="mood-btn" data-mood="5"><span class="emoji">😊</span><span class="label">Genial</span></button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Ratings (1-10)</h3>
+                    <div class="grid grid-2">
+                        <div>
+                            <p class="card-title" style="font-size: 0.9rem;">⚡ Energía</p>
+                            <div class="rating-scale" id="rating-energia">
+                                <button class="rating-btn">1</button><button class="rating-btn">2</button><button class="rating-btn">3</button><button class="rating-btn">4</button><button class="rating-btn">5</button><button class="rating-btn">6</button><button class="rating-btn">7</button><button class="rating-btn">8</button><button class="rating-btn">9</button><button class="rating-btn">10</button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="card-title" style="font-size: 0.9rem;">🎯 Productividad</p>
+                            <div class="rating-scale" id="rating-productividad">
+                                <button class="rating-btn">1</button><button class="rating-btn">2</button><button class="rating-btn">3</button><button class="rating-btn">4</button><button class="rating-btn">5</button><button class="rating-btn">6</button><button class="rating-btn">7</button><button class="rating-btn">8</button><button class="rating-btn">9</button><button class="rating-btn">10</button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="card-title" style="font-size: 0.9rem;">🎉 Diversión</p>
+                            <div class="rating-scale" id="rating-diversion">
+                                <button class="rating-btn">1</button><button class="rating-btn">2</button><button class="rating-btn">3</button><button class="rating-btn">4</button><button class="rating-btn">5</button><button class="rating-btn">6</button><button class="rating-btn">7</button><button class="rating-btn">8</button><button class="rating-btn">9</button><button class="rating-btn">10</button>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="card-title" style="font-size: 0.9rem;">😰 Estrés</p>
+                            <div class="rating-scale" id="rating-estres">
+                                <button class="rating-btn">1</button><button class="rating-btn">2</button><button class="rating-btn">3</button><button class="rating-btn">4</button><button class="rating-btn">5</button><button class="rating-btn">6</button><button class="rating-btn">7</button><button class="rating-btn">8</button><button class="rating-btn">9</button><button class="rating-btn">10</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Detalles del día</h3>
+                    <div class="grid grid-2">
+                        <div class="input-group">
+                            <label>Horas dormidas</label>
+                            <input type="number" id="horas-dormidas" step="0.5" min="0" max="24" placeholder="Ej: 7.5">
+                        </div>
+                        <div class="input-group">
+                            <label>Ejercicio (min)</label>
+                            <input type="number" id="ejercicio-minutos" min="0" placeholder="Ej: 30">
+                        </div>
+                        <div class="input-group">
+                            <label>Lectura (min)</label>
+                            <input type="number" id="lectura-minutos" min="0" placeholder="Ej: 45">
+                        </div>
+                        <div class="input-group">
+                            <label>Pantalla (min)</label>
+                            <input type="number" id="tiempo-pantalla" min="0" placeholder="Ej: 120">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Reflexiones</h3>
+                    <div class="input-group">
+                        <label>¿Qué ha salido bien?</label>
+                        <textarea id="salio-bien" placeholder="Momentos positivos..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>¿Qué ha salido mal?</label>
+                        <textarea id="salio-mal" placeholder="Desafíos..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>¿Qué has aprendido?</label>
+                        <textarea id="aprendio" placeholder="Nuevo conocimiento..."></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label>¿Qué quieres hacer mañana?</label>
+                        <textarea id="manana-quiere" placeholder="Planes..."></textarea>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary btn-full" onclick="saveDailyEntry()">
+                    💾 Guardar Registro
+                </button>
+            </div>
+            
+            <!-- ==================== PROJECTS PAGE ==================== -->
+            <div class="page" id="page-projects">
+                <div class="projects-header">
+                    <div>
+                        <h1 class="page-title">🚀 Proyectos</h1>
+                        <p class="page-subtitle">Gestión por competencias</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('new-project-modal')">+ Nuevo Proyecto</button>
+                </div>
+                
+                <div class="grid grid-3" style="margin-bottom: var(--space-xl);">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-projects">0</div>
+                        <div class="stat-label">Total</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="active-projects">0</div>
+                        <div class="stat-label">Activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="completed-projects">0</div>
+                        <div class="stat-label">Completados</div>
+                    </div>
+                </div>
+                
+                <div id="projects-list"></div>
+            </div>
+            
+            <!-- ==================== ACTIVITIES PAGE ==================== -->
+            <div class="page" id="page-activities">
+                <div class="page-header">
+                    <h1 class="page-title">✨ Actividades</h1>
+                    <p class="page-subtitle">Descubre algo nuevo</p>
+                </div>
+                
+                <div class="activities-filter">
+                    <button class="filter-btn active" data-filter="all">Todas</button>
+                    <button class="filter-btn" data-filter="aprendizaje">Aprendizaje</button>
+                    <button class="filter-btn" data-filter="salud">Salud</button>
+                    <button class="filter-btn" data-filter="creatividad">Creatividad</button>
+                    <button class="filter-btn" data-filter="social">Social</button>
+                    <button class="filter-btn" data-filter="ocio">Ocio</button>
+                </div>
+                
+                <div id="activities-list"></div>
+            </div>
+            
+            <!-- ==================== INSIGHTS PAGE ==================== -->
+            <div class="page" id="page-insights">
+                <div class="page-header">
+                    <h1 class="page-title">📊 Análisis</h1>
+                    <p class="page-subtitle">Patrones y descubrimientos</p>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="chart-container">
+                        <h3 class="chart-title">Promedio semanal</h3>
+                        <div class="bar-chart">
+                            <div class="bar-item">
+                                <span class="bar-label">Energía</span>
+                                <div class="bar-track"><div class="bar-fill" id="bar-energia">0</div></div>
+                            </div>
+                            <div class="bar-item">
+                                <span class="bar-label">Ánimo</span>
+                                <div class="bar-track"><div class="bar-fill" id="bar-animo">0</div></div>
+                            </div>
+                            <div class="bar-item">
+                                <span class="bar-label">Productividad</span>
+                                <div class="bar-track"><div class="bar-fill" id="bar-productividad">0</div></div>
+                            </div>
+                            <div class="bar-item">
+                                <span class="bar-label">Diversión</span>
+                                <div class="bar-track"><div class="bar-fill" id="bar-diversion">0</div></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <h3 class="chart-title">Insights</h3>
+                        <div id="insights-list"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ==================== HISTORY PAGE ==================== -->
+            <div class="page" id="page-history">
+                <div class="page-header">
+                    <h1 class="page-title">📅 Historial</h1>
+                    <p class="page-subtitle">Tu línea de tiempo personal</p>
+                </div>
+                <div id="history-list"></div>
+            </div>
+            
+            <!-- ==================== PROFILE PAGE ==================== -->
+            <div class="page" id="page-profile">
+                <div class="page-header">
+                    <h1 class="page-title">👤 Tu Perfil</h1>
+                    <p class="page-subtitle">Conócete mejor</p>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Información Personal</h3>
+                    <div class="profile-grid">
+                        <div class="profile-field">
+                            <label>Nombre</label>
+                            <div class="value" id="profile-nombre">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Edad</label>
+                            <div class="value" id="profile-edad">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Profesión</label>
+                            <div class="value" id="profile-profesion">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Ciudad</label>
+                            <div class="value" id="profile-ciudad">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Disponibilidad</label>
+                            <div class="value" id="profile-disponibilidad">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Energía habitual</label>
+                            <div class="value" id="profile-energia">-</div>
+                        </div>
+                        <div class="profile-field full-width">
+                            <label>Intereses</label>
+                            <div class="value" id="profile-intereses">-</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" style="margin-top: var(--space-lg);" onclick="openModal('edit-profile-modal')">Editar Perfil</button>
+                </div>
+                
+                <div class="card">
+                    <h3 class="card-title">Preferencias</h3>
+                    <div class="profile-grid">
+                        <div class="profile-field full-width">
+                            <label>¿Qué te hace feliz?</label>
+                            <div class="value" id="pref-hace-feliz">-</div>
+                        </div>
+                        <div class="profile-field full-width">
+                            <label>¿Qué te motiva?</label>
+                            <div class="value" id="pref-motiva">-</div>
+                        </div>
+                        <div class="profile-field full-width">
+                            <label>¿Qué te aburre?</label>
+                            <div class="value" id="pref-aburre">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Forma de aprender</label>
+                            <div class="value" id="pref-aprender">-</div>
+                        </div>
+                        <div class="profile-field">
+                            <label>Forma de descansar</label>
+                            <div class="value" id="pref-descansar">-</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" style="margin-top: var(--space-lg);" onclick="openModal('edit-preferences-modal')">Editar Preferencias</button>
+                </div>
+            </div>
+            
+            <!-- ==================== SETTINGS PAGE ==================== -->
+            <div class="page" id="page-settings">
+                <div class="page-header">
+                    <h1 class="page-title">⚙️ Ajustes</h1>
+                    <p class="page-subtitle">Personaliza tu experiencia</p>
+                </div>
+                
+                <div class="card">
+                    <div class="settings-section">
+                        <h3 class="settings-title">Datos</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Exportar datos</h4>
+                                <p>Descarga todos tus datos en JSON</p>
+                            </div>
+                            <button class="btn btn-secondary btn-sm" id="export-data-btn">Exportar</button>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Resetear</h4>
+                                <p>Eliminar configuración guardada</p>
+                            </div>
+                            <button class="btn btn-danger btn-sm" id="reset-data-btn">Reset</button>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <h3 class="settings-title">Conexión</h3>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>URL de Supabase</h4>
+                                <p id="supabase-url">No configurado</p>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <h4>Estado</h4>
+                                <p id="connection-status">Verificando...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- ==================== MODALS ==================== -->
+    
+    <!-- New Project Modal -->
+    <div class="modal-overlay" id="new-project-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🚀 Nuevo Proyecto</h2>
+                <button class="modal-close" onclick="closeModal('new-project-modal')">×</button>
+            </div>
+            <div class="input-group">
+                <label>Nombre del proyecto</label>
+                <input type="text" id="project-name" placeholder="Ej: Aprender Docker">
+            </div>
+            <div class="input-group">
+                <label>Descripción</label>
+                <textarea id="project-description" placeholder="¿De qué trata?"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Competencias (separadas por coma)</label>
+                <textarea id="project-competencies" placeholder="Ej: Imágenes, Dockerfiles, Redes"></textarea>
+            </div>
+            <div class="input-group">
+                <label>Nivel estimado</label>
+                <select id="project-level">
+                    <option value="principiante">Principiante</option>
+                    <option value="intermedio">Intermedio</option>
+                    <option value="avanzado">Avanzado</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('new-project-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="createProject()">Crear</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Profile Modal -->
+    <div class="modal-overlay" id="edit-profile-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Perfil</h2>
+                <button class="modal-close" onclick="closeModal('edit-profile-modal')">×</button>
+            </div>
+            <div class="input-group">
+                <label>Nombre</label>
+                <input type="text" id="edit-nombre">
+            </div>
+            <div class="grid grid-2">
+                <div class="input-group">
+                    <label>Edad</label>
+                    <input type="number" id="edit-edad">
+                </div>
+                <div class="input-group">
+                    <label>Ciudad</label>
+                    <input type="text" id="edit-ciudad">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>Profesión</label>
+                <input type="text" id="edit-profesion">
+            </div>
+            <div class="input-group">
+                <label>Intereses (separados por coma)</label>
+                <textarea id="edit-intereses"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('edit-profile-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveProfile()">Guardar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Preferences Modal -->
+    <div class="modal-overlay" id="edit-preferences-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">Editar Preferencias</h2>
+                <button class="modal-close" onclick="closeModal('edit-preferences-modal')">×</button>
+            </div>
+            <div class="input-group">
+                <label>¿Qué te hace feliz?</label>
+                <textarea id="edit-hace-feliz" placeholder="Separadas por coma"></textarea>
+            </div>
+            <div class="input-group">
+                <label>¿Qué te motiva?</label>
+                <textarea id="edit-motiva" placeholder="Separadas por coma"></textarea>
+            </div>
+            <div class="input-group">
+                <label>¿Qué te aburre?</label>
+                <textarea id="edit-aburre" placeholder="Separadas por coma"></textarea>
+            </div>
+            <div class="grid grid-2">
+                <div class="input-group">
+                    <label>Forma de aprender</label>
+                    <input type="text" id="edit-aprender">
+                </div>
+                <div class="input-group">
+                    <label>Forma de descansar</label>
+                    <input type="text" id="edit-descansar">
+                </div>
+            </div>
+            <div class="input-group">
+                <label>¿Qué es un buen día?</label>
+                <textarea id="edit-buen-dia"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('edit-preferences-modal')">Cancelar</button>
+                <button class="btn btn-primary" onclick="savePreferences()">Guardar</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Retrospective Modal -->
+    <div class="modal-overlay" id="retrospective-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 class="modal-title">🌙 Retrospectiva nocturna</h2>
+                <button class="modal-close" onclick="closeModal('retrospective-modal')">×</button>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">
+                Revisa cómo ha ido el día y prepárate para mañana.
+            </p>
+            <div class="input-group">
+                <label>¿Qué fue lo mejor?</label>
+                <textarea id="retro-mejor" placeholder="El momento más destacado..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>¿Qué harías diferente?</label>
+                <textarea id="retro-diferente" placeholder="Ideas para mañana..."></textarea>
+            </div>
+            <div class="input-group">
+                <label>¿Qué quieres lograr mañana?</label>
+                <textarea id="retro-manana" placeholder="Tus intenciones..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('retrospective-modal')">Omitir</button>
+                <button class="btn btn-primary" onclick="saveRetrospective()">Guardar y Dormir 💤</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Scripts -->
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
